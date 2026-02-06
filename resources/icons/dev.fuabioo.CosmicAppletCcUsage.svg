@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <!-- Gauge background arc (semicircle) -->
+  <path
+    d="M 3 12 A 5 5 0 0 1 13 12"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.5"
+    stroke-linecap="round"
+    opacity="0.3"
+  />
+
+  <!-- Gauge needle pointing at ~60% (middle position) -->
+  <g transform="translate(8, 12)">
+    <!-- Needle line -->
+    <line
+      x1="0"
+      y1="0"
+      x2="-2"
+      y2="-4"
+      stroke="currentColor"
+      stroke-width="1.2"
+      stroke-linecap="round"
+    />
+    <!-- Center dot -->
+    <circle
+      cx="0"
+      cy="0"
+      r="1"
+      fill="currentColor"
+    />
+  </g>
+
+  <!-- Optional: tick marks at 0%, 50%, 100% positions -->
+  <line x1="3" y1="12" x2="3" y2="10.5" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>
+  <line x1="8" y1="7" x2="8" y2="5.5" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>
+  <line x1="13" y1="12" x2="13" y2="10.5" stroke="currentColor" stroke-width="0.8" opacity="0.5"/>
+</svg>

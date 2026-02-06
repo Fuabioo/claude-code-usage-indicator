@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=Claude Code Usage
+Comment=Monitor Claude Code weekly and hourly usage budget
+Type=Application
+Icon=dev.fuabioo.CosmicAppletCcUsage
+Exec=cosmic-applet-cc-usage
+Terminal=false
+StartupNotify=true
+Categories=COSMIC;System;Monitor;
+Keywords=claude;ai;usage;budget;
+NoDisplay=true
+X-CosmicApplet=true
+X-CosmicHoverPopup=Auto

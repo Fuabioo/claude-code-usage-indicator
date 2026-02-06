@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="addon">
+  <id>dev.fuabioo.CosmicAppletCcUsage</id>
+  <extends>com.system76.CosmicPanel</extends>
+  <name>Claude Code Usage</name>
+  <summary>Monitor Claude Code weekly and hourly usage budget</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+
+  <description>
+    <p>
+      A COSMIC panel applet that displays Claude Code usage metrics directly in the system panel.
+      Shows weekly and hourly budget consumption with pace-based color coding to help manage
+      your Claude Code interaction limits.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Real-time weekly usage tracking (out of 1,000 interactions)</li>
+      <li>Hourly session monitoring (out of 100 interactions)</li>
+      <li>Daily budget pace indicator with visual color coding</li>
+      <li>Detailed popup dashboard with progress bars and time-to-reset information</li>
+      <li>Configurable polling interval and work week settings</li>
+    </ul>
+  </description>
+
+  <url type="homepage">https://github.com/fuabioo/claude-code-usage-indicator</url>
+  <url type="bugtracker">https://github.com/fuabioo/claude-code-usage-indicator/issues</url>
+
+  <developer_name>fuabioo</developer_name>
+
+  <releases>
+    <release version="0.1.0" date="2025-02-05">
+      <description>
+        <p>Initial release</p>
+        <ul>
+          <li>Panel icon with colored usage percentage</li>
+          <li>Detailed popup dashboard on click</li>
+          <li>OAuth token integration with Claude CLI credentials</li>
+          <li>Configurable polling and budget thresholds</li>
+        </ul>
+      </description>
+    </release>
+  </releases>
+
+  <categories>
+    <category>System</category>
+    <category>Monitor</category>
+  </categories>
+</component>

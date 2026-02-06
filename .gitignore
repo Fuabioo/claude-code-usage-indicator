@@ -1,0 +1,9 @@
+/target
+*.swp
+*.swo
+.env
+.env.*
+*.pem
+*.key
+.claude/settings.local.json
+.workflow

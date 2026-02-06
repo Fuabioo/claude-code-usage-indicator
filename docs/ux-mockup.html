@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COSMIC Applet: Claude Code Usage Monitor — UX Reference</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300;400;500;600;700&family=Fira+Mono:wght@400;500&display=swap');
+
+  :root {
+    --cosmic-bg-deep: #0e0e0e;
+    --cosmic-bg-wallpaper: #151520;
+    --cosmic-panel: #1a1a1a;
+    --cosmic-panel-border: rgba(255,255,255,0.04);
+    --cosmic-popup: #2a2a2e;
+    --cosmic-popup-elevated: #313136;
+    --cosmic-border: #3a3a3f;
+    --cosmic-border-subtle: rgba(255,255,255,0.06);
+    --cosmic-text: #e8e8ec;
+    --cosmic-text-secondary: #8e8e96;
+    --cosmic-text-dim: #5c5c64;
+    --cosmic-success: #4CAF50;
+    --cosmic-success-dim: rgba(76,175,80,0.15);
+    --cosmic-warning: #FFC107;
+    --cosmic-warning-dim: rgba(255,193,7,0.15);
+    --cosmic-destructive: #F44336;
+    --cosmic-destructive-dim: rgba(244,67,54,0.15);
+    --cosmic-accent: #63B3ED;
+    --cosmic-track: #38383e;
+    --cosmic-radius: 12px;
+    --cosmic-radius-sm: 8px;
+    --cosmic-radius-xs: 4px;
+    --cosmic-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.3);
+    --font-body: 'Fira Sans', system-ui, sans-serif;
+    --font-mono: 'Fira Mono', 'Cascadia Code', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cosmic-bg-wallpaper);
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(99,179,237,0.03) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(76,175,80,0.02) 0%, transparent 50%),
+      linear-gradient(180deg, #12121a 0%, #181824 100%);
+    color: var(--cosmic-text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 0 0 80px 0;
+  }
+
+  .page-title {
+    text-align: center;
+    padding: 48px 24px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--cosmic-text-secondary);
+  }
+  .page-title span {
+    color: var(--cosmic-accent);
+  }
+
+  .page-subtitle {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cosmic-text-dim);
+    margin-bottom: 40px;
+    letter-spacing: 0.04em;
+  }
+
+  /* ─── SECTION LABELS ─── */
+  .scene-label {
+    max-width: 1100px;
+    margin: 40px auto 14px;
+    padding: 0 32px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--cosmic-text-dim);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .scene-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--cosmic-border-subtle);
+  }
+
+  /* ─── PANEL BAR ─── */
+  .panel-bar {
+    width: 100%;
+    height: 36px;
+    background: var(--cosmic-panel);
+    border-bottom: 1px solid var(--cosmic-panel-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    position: relative;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+  .panel-bar::before {
+    content: '';
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    background: var(--cosmic-accent);
+    border-radius: 50%;
+    opacity: 0.5;
+  }
+
+  .panel-item {
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: default;
+    transition: background 0.15s;
+    position: relative;
+  }
+  .panel-item:hover {
+    background: rgba(255,255,255,0.06);
+  }
+  .panel-item .sep {
+    color: var(--cosmic-text-dim);
+    opacity: 0.5;
+    margin: 0 1px;
+    font-weight: 300;
+  }
+
+  .panel-item .icon-gauge {
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .panel-item .icon-gauge svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .panel-item-label {
+    position: absolute;
+    bottom: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-body);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--cosmic-text-dim);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .c-green { color: var(--cosmic-success); }
+  .c-yellow { color: var(--cosmic-warning); }
+  .c-red { color: var(--cosmic-destructive); }
+  .c-dim { color: var(--cosmic-text-dim); }
+  .c-bold { font-weight: 700; }
+
+  .panel-spacer {
+    width: 24px;
+  }
+
+  /* ─── POPUP CARDS ─── */
+  .popups-row {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px;
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .popup-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .popup-anchor {
+    width: 12px;
+    height: 8px;
+    position: relative;
+    margin-bottom: -1px;
+    z-index: 2;
+  }
+  .popup-anchor::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-bottom: 8px solid var(--cosmic-border);
+  }
+  .popup-anchor::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 1px;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 7px solid var(--cosmic-popup);
+  }
+
+  .popup-card {
+    width: 340px;
+    background: var(--cosmic-popup);
+    border: 1px solid var(--cosmic-border);
+    border-radius: var(--cosmic-radius);
+    box-shadow: var(--cosmic-shadow);
+    overflow: hidden;
+  }
+
+  .popup-header {
+    padding: 16px 18px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--cosmic-text);
+    letter-spacing: 0.01em;
+  }
+
+  .popup-section {
+    padding: 10px 18px 14px;
+  }
+
+  .popup-section-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--cosmic-text-secondary);
+    margin-bottom: 10px;
+  }
+
+  .popup-divider {
+    height: 1px;
+    background: var(--cosmic-border-subtle);
+    margin: 0 18px;
+  }
+
+  /* Progress bar */
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .progress-track {
+    flex: 1;
+    height: 6px;
+    background: var(--cosmic-track);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+  .progress-fill.green { background: var(--cosmic-success); }
+  .progress-fill.yellow { background: var(--cosmic-warning); }
+  .progress-fill.red { background: var(--cosmic-destructive); }
+
+  .progress-pct {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    min-width: 38px;
+    text-align: right;
+  }
+
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--cosmic-text-secondary);
+  }
+  .meta-row .pace-label {
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+  }
+
+  /* Daily pace section */
+  .pace-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    font-size: 12.5px;
+  }
+  .pace-item .pace-key {
+    color: var(--cosmic-text-secondary);
+  }
+  .pace-item .pace-val {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    color: var(--cosmic-text);
+    font-size: 12px;
+  }
+
+  /* Footer */
+  .popup-footer {
+    padding: 10px 18px 14px;
+    font-size: 11px;
+    color: var(--cosmic-text-dim);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .popup-footer .dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--cosmic-success);
+    flex-shrink: 0;
+  }
+  .popup-footer .dot.stale {
+    background: var(--cosmic-warning);
+  }
+
+  /* ─── RESPONSIVE PANEL SIZES ─── */
+  .responsive-row {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .responsive-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .responsive-item .r-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--cosmic-text-dim);
+  }
+
+  .r-panel {
+    height: 32px;
+    background: var(--cosmic-panel);
+    border: 1px solid var(--cosmic-panel-border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    gap: 5px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  .r-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--cosmic-success);
+  }
+
+  /* ─── TOOLTIP PREVIEW ─── */
+  .tooltip-preview {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .tooltip-box {
+    background: #222226;
+    border: 1px solid var(--cosmic-border);
+    border-radius: var(--cosmic-radius-sm);
+    padding: 8px 14px;
+    font-size: 12px;
+    color: var(--cosmic-text-secondary);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+    max-width: 420px;
+    line-height: 1.6;
+  }
+  .tooltip-box strong {
+    color: var(--cosmic-text);
+    font-weight: 500;
+  }
+
+  /* SVG icons inline */
+  .icon-svg {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-title"><span>COSMIC</span> Applet: Claude Code Usage Monitor</div>
+<div class="page-subtitle">UX Reference Mockup &mdash; Design Specification for Rust Implementation</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- SCENE 1: PANEL BAR STATES                        -->
+<!-- ════════════════════════════════════════════════ -->
+
+<div class="scene-label">Scene 1 &mdash; Panel Bar States</div>
+
+<div class="panel-bar">
+  <!-- Green / On Track -->
+  <div class="panel-item">
+    <span class="icon-svg">
+      <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
+        <path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM3 8a5 5 0 015-5v5l3.54 3.54A5 5 0 013 8z" fill="#4CAF50" opacity="0.85"/>
+      </svg>
+    </span>
+    <span class="c-green">42%</span>
+    <span class="sep">|</span>
+    <span class="c-green">15%</span>
+    <span class="panel-item-label">On Track</span>
+  </div>
+
+  <div class="panel-spacer"></div>
+
+  <!-- Yellow / Caution -->
+  <div class="panel-item">
+    <span class="icon-svg">
+      <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
+        <path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM3 8a5 5 0 015-5v5l3.54 3.54A5 5 0 013 8z" fill="#FFC107" opacity="0.85"/>
+      </svg>
+    </span>
+    <span class="c-yellow">68%</span>
+    <span class="sep">|</span>
+    <span class="c-yellow">55%</span>
+    <span class="panel-item-label">Caution</span>
+  </div>
+
+  <div class="panel-spacer"></div>
+
+  <!-- Red / Critical -->
+  <div class="panel-item">
+    <span class="icon-svg">
+      <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
+        <path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM3 8a5 5 0 015-5v5l3.54 3.54A5 5 0 013 8z" fill="#F44336" opacity="0.85"/>
+      </svg>
+    </span>
+    <span class="c-red">92%</span>
+    <span class="sep">|</span>
+    <span class="c-red">85%</span>
+    <span class="panel-item-label">Critical</span>
+  </div>
+
+  <div class="panel-spacer"></div>
+
+  <!-- Over Budget -->
+  <div class="panel-item">
+    <span class="icon-svg">
+      <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
+        <path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM3 8a5 5 0 015-5v5l3.54 3.54A5 5 0 013 8z" fill="#F44336"/>
+      </svg>
+    </span>
+    <span class="c-red c-bold">110%</span>
+    <span class="sep">|</span>
+    <span class="c-red c-bold">95%</span>
+    <span class="panel-item-label">Over Budget</span>
+  </div>
+
+  <div class="panel-spacer"></div>
+
+  <!-- Error -->
+  <div class="panel-item">
+    <span class="icon-svg">
+      <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
+        <path d="M8 1l6.93 12H1.07L8 1z" fill="none" stroke="#5c5c64" stroke-width="1.2"/>
+        <path d="M8 6v3" stroke="#5c5c64" stroke-width="1.2" stroke-linecap="round"/>
+        <circle cx="8" cy="11" r="0.7" fill="#5c5c64"/>
+      </svg>
+    </span>
+    <span class="c-dim">&ndash;&ndash;</span>
+    <span class="panel-item-label">Error</span>
+  </div>
+
+  <div class="panel-spacer"></div>
+
+  <!-- No Credentials -->
+  <div class="panel-item">
+    <span class="icon-svg">
+      <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
+        <circle cx="8" cy="8" r="6" fill="none" stroke="#5c5c64" stroke-width="1.2"/>
+        <path d="M6.5 6.2a1.8 1.8 0 013.3 1c0 1.2-1.8 1.1-1.8 2.3" stroke="#5c5c64" stroke-width="1.1" stroke-linecap="round"/>
+        <circle cx="8" cy="11.5" r="0.6" fill="#5c5c64"/>
+      </svg>
+    </span>
+    <span class="c-dim">?</span>
+    <span class="panel-item-label">No Credentials</span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- TOOLTIPS                                         -->
+<!-- ════════════════════════════════════════════════ -->
+
+<div class="scene-label">Tooltip Examples (on hover)</div>
+
+<div class="tooltip-preview">
+  <div class="tooltip-box">
+    <strong>Weekly:</strong> 42% (resets in 3d 12h) &nbsp;&bull;&nbsp; <strong>Hourly:</strong> 15% (resets in 2h 45m)
+  </div>
+  <div class="tooltip-box">
+    <strong style="color:#F44336;">OVER BUDGET</strong> &mdash; Weekly: 110% (resets in 5d 8h) &nbsp;&bull;&nbsp; Hourly: 95% (resets in 1h 12m)
+  </div>
+  <div class="tooltip-box">
+    Unable to fetch usage data: network timeout
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- SCENE 2 & 3: POPUP DETAIL VIEWS                  -->
+<!-- ════════════════════════════════════════════════ -->
+
+<div class="scene-label">Scene 2 &amp; 3 &mdash; Popup Detail Views</div>
+
+<div class="popups-row">
+
+  <!-- ──── POPUP: On Track (Wednesday) ──── -->
+  <div class="popup-wrapper">
+    <div class="popup-anchor"></div>
+    <div class="popup-card">
+      <div class="popup-header">Claude Code Usage</div>
+
+      <!-- Weekly Budget -->
+      <div class="popup-section">
+        <div class="popup-section-title">Weekly Budget</div>
+        <div class="progress-row">
+          <div class="progress-track">
+            <div class="progress-fill green" style="width: 42%;"></div>
+          </div>
+          <div class="progress-pct c-green">42%</div>
+        </div>
+        <div class="meta-row">
+          <span>Resets in 3d 12h</span>
+          <span class="pace-label c-green">On Track</span>
+        </div>
+      </div>
+
+      <div class="popup-divider"></div>
+
+      <!-- Hourly Session -->
+      <div class="popup-section">
+        <div class="popup-section-title">Hourly Session</div>
+        <div class="progress-row">
+          <div class="progress-track">
+            <div class="progress-fill green" style="width: 15%;"></div>
+          </div>
+          <div class="progress-pct c-green">15%</div>
+        </div>
+        <div class="meta-row">
+          <span>Resets in 2h 45m</span>
+        </div>
+      </div>
+
+      <div class="popup-divider"></div>
+
+      <!-- Daily Budget Pace -->
+      <div class="popup-section">
+        <div class="popup-section-title">Daily Budget Pace</div>
+        <div class="pace-item">
+          <span class="pace-key">Today's ceiling</span>
+          <span class="pace-val">60% <span style="color:var(--cosmic-text-dim);">(Wed, day 3/5)</span></span>
+        </div>
+        <div class="pace-item">
+          <span class="pace-key">Consumed</span>
+          <span class="pace-val">42% <span style="color:var(--cosmic-text-dim);">of 60% ceiling</span></span>
+        </div>
+        <div class="pace-item">
+          <span class="pace-key">Remaining today</span>
+          <span class="pace-val c-green" style="font-weight:600;">18%</span>
+        </div>
+      </div>
+
+      <div class="popup-divider"></div>
+
+      <!-- Footer -->
+      <div class="popup-footer">
+        <span class="dot"></span>
+        Last updated: 2 min ago
+      </div>
+    </div>
+  </div>
+
+  <!-- ──── POPUP: Over Budget (Monday) ──── -->
+  <div class="popup-wrapper">
+    <div class="popup-anchor"></div>
+    <div class="popup-card">
+      <div class="popup-header">Claude Code Usage</div>
+
+      <!-- Weekly Budget -->
+      <div class="popup-section">
+        <div class="popup-section-title">Weekly Budget</div>
+        <div class="progress-row">
+          <div class="progress-track">
+            <div class="progress-fill red" style="width: 25%;"></div>
+          </div>
+          <div class="progress-pct c-red" style="font-weight:700;">25%</div>
+        </div>
+        <div class="meta-row">
+          <span>Resets in 5d 8h</span>
+          <span class="pace-label c-red">Over Budget</span>
+        </div>
+      </div>
+
+      <div class="popup-divider"></div>
+
+      <!-- Hourly Session -->
+      <div class="popup-section">
+        <div class="popup-section-title">Hourly Session</div>
+        <div class="progress-row">
+          <div class="progress-track">
+            <div class="progress-fill red" style="width: 80%;"></div>
+          </div>
+          <div class="progress-pct c-red">80%</div>
+        </div>
+        <div class="meta-row">
+          <span>Resets in 0h 42m</span>
+        </div>
+      </div>
+
+      <div class="popup-divider"></div>
+
+      <!-- Daily Budget Pace -->
+      <div class="popup-section">
+        <div class="popup-section-title">Daily Budget Pace</div>
+        <div class="pace-item">
+          <span class="pace-key">Today's ceiling</span>
+          <span class="pace-val">20% <span style="color:var(--cosmic-text-dim);">(Mon, day 1/5)</span></span>
+        </div>
+        <div class="pace-item">
+          <span class="pace-key">Consumed</span>
+          <span class="pace-val">25% <span style="color:var(--cosmic-text-dim);">of 20% ceiling</span></span>
+        </div>
+        <div class="pace-item">
+          <span class="pace-key">Over by</span>
+          <span class="pace-val c-red" style="font-weight:700;">5%</span>
+        </div>
+      </div>
+
+      <div class="popup-divider"></div>
+
+      <!-- Footer -->
+      <div class="popup-footer">
+        <span class="dot stale"></span>
+        Last updated: 8 min ago &mdash; <span style="color:var(--cosmic-warning);">data may be stale</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- SCENE 4: PANEL SIZE RESPONSIVENESS               -->
+<!-- ════════════════════════════════════════════════ -->
+
+<div class="scene-label">Scene 4 &mdash; Panel Size Responsiveness</div>
+
+<div class="responsive-row">
+  <div class="responsive-item">
+    <div class="r-label">Small</div>
+    <div class="r-panel" style="padding: 0 8px;">
+      <div class="r-dot"></div>
+    </div>
+  </div>
+
+  <div class="responsive-item">
+    <div class="r-label">Medium</div>
+    <div class="r-panel">
+      <span class="c-green">42%</span>
+    </div>
+  </div>
+
+  <div class="responsive-item">
+    <div class="r-label">Large</div>
+    <div class="r-panel">
+      <span class="c-green">42%</span>
+      <span class="sep" style="color:var(--cosmic-text-dim); opacity:0.5;">|</span>
+      <span class="c-green">15%</span>
+    </div>
+  </div>
+
+  <div class="responsive-item">
+    <div class="r-label">XL</div>
+    <div class="r-panel">
+      <span class="c-green">42%</span>
+      <span style="color:var(--cosmic-text-secondary); font-size:11px;">3d 12h</span>
+      <span class="sep" style="color:var(--cosmic-text-dim); opacity:0.5;">|</span>
+      <span class="c-green">15%</span>
+      <span style="color:var(--cosmic-text-secondary); font-size:11px;">2h 45m</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
