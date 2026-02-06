@@ -1,10 +1,10 @@
 # Application metadata
 app-name = Claude Code Usage
-app-description = Monitor Claude Code weekly and hourly usage budget
+app-description = Monitor Claude Code weekly and session usage budget
 
 # Panel view labels
 weekly-budget = Weekly
-hourly-session = Hourly
+session-budget = Session
 daily-budget-pace = Daily Pace
 
 # Pace status indicators
@@ -43,5 +43,5 @@ error-unauthorized = Unauthorized - token may be expired
 
 # Unused tooltip keys (reserved for potential panel icon tooltips):
 # tooltip-weekly-usage = Weekly usage: {$percentage}% of 1,000 interactions
-# tooltip-hourly-session = Current hour: {$percentage}% of 100 interactions
+# tooltip-session = Session: {$percentage}% utilization
 # tooltip-click-for-details = Click for detailed budget breakdown
