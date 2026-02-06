@@ -6,8 +6,8 @@ A [COSMIC](https://github.com/pop-os/cosmic-epoch) panel applet for monitoring y
 
 ## Features
 
-- **Panel indicator** with color-coded weekly and hourly usage percentages
-- **Popup dashboard** showing weekly budget, hourly session, daily pace, and reset timers
+- **Panel indicator** with color-coded weekly and session usage percentages
+- **Popup dashboard** showing weekly budget, session window, daily pace, and reset timers
 - **COSMIC theme integration** -- colors adapt to dark/light mode automatically
 - **Configurable colors** via `cosmic_config` with hot-reload (no restart needed)
 - **Adaptive panel display** -- scales from a dot to full stats depending on panel size

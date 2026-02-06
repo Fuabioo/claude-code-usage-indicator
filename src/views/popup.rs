@@ -84,7 +84,7 @@ fn render_weekly_section<'a>(budget: &'a BudgetState, config: &'a Config) -> Ele
     .into()
 }
 
-/// Section 2: Hourly Session
+/// Section 2: Session
 fn render_hourly_section<'a>(budget: &'a BudgetState, config: &'a Config) -> Element<'a, Message> {
     let pct = budget.hourly.utilization;
     let color = &budget.hourly.pace_color;
@@ -95,7 +95,7 @@ fn render_hourly_section<'a>(budget: &'a BudgetState, config: &'a Config) -> Ele
         .signed_duration_since(chrono::Utc::now());
     let resets_text = format_duration(resets_duration);
 
-    let hourly_session_text = fl!("hourly-session");
+    let hourly_session_text = fl!("session-budget");
     let resets_in_text = fl!("resets-in", time = resets_text.as_str());
 
     widget::column::with_children(vec![

@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Claude Code Usage
-Comment=Monitor Claude Code weekly and hourly usage budget
+Comment=Monitor Claude Code weekly and session usage budget
 Type=Application
 Icon=dev.fuabioo.CosmicAppletCcUsage
 Exec=cosmic-applet-cc-usage

@@ -96,7 +96,7 @@ fn render_budget_view<'a>(budget: &'a BudgetState, config: &'a Config) -> Elemen
                 .into()
         }
         PanelSize::Large => {
-            // Weekly % | Hourly %
+            // Weekly % | Session %
             widget::row::with_children(vec![
                 text(weekly_pct.clone())
                     .class(cosmic::theme::Text::Color(weekly_color))
