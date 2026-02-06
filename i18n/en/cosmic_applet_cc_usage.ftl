@@ -4,7 +4,7 @@ app-description = Monitor Claude Code weekly and hourly usage budget
 
 # Panel view labels
 weekly-budget = Weekly
-hourly-session = Hourly
+hourly-session = Session
 daily-budget-pace = Daily Pace
 
 # Pace status indicators
