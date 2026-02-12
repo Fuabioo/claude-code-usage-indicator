@@ -74,7 +74,10 @@ impl Application for AppModel {
     }
 
     fn view(&self) -> Element<'_, Self::Message> {
-        crate::views::panel::render(self)
+        self.core
+            .applet
+            .autosize_window(crate::views::panel::render(self))
+            .into()
     }
 
     fn view_window(&self, id: window::Id) -> Element<'_, Self::Message> {
