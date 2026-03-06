@@ -15,7 +15,7 @@ pace-over-budget = Over Budget
 # Time and budget display
 resets-in = Resets in {$time}
 todays-ceiling = Today's ceiling
-todays-ceiling-detail = {$label}: {$ceiling}% ({$weekday}, day {$index}/{$total})
+todays-ceiling-detail = {$label}: {$ceiling}% (day {$index}/{$total}, resets {$resetDay})
 consumed = Consumed
 consumed-detail = {$label}: {$consumed}% of {$ceiling}% ceiling
 remaining-today = Remaining today

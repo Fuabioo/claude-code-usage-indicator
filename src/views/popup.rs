@@ -1,8 +1,8 @@
 use crate::app::{AppModel, Message};
-use crate::budget::{format_duration, weekday_to_work_index, BudgetError, BudgetState, PaceColor};
+use crate::budget::{days_into_cycle, format_duration, reset_day_name, BudgetError, BudgetState, PaceColor};
 use crate::config::Config;
 use crate::fl;
-use chrono::{Datelike, Local};
+use chrono::Utc;
 use cosmic::iced::Length;
 use cosmic::iced_core::Alignment;
 use cosmic::widget::text;
@@ -122,14 +122,12 @@ fn render_daily_pace_section<'a>(
     budget: &'a BudgetState,
     config: &'a Config,
 ) -> Element<'a, Message> {
-    let now = Local::now();
-    let work_day_index = weekday_to_work_index(now.weekday(), config.work_days);
+    let resets_at = budget.weekly.resets_at;
+    let now = Utc::now();
+    let work_day_index = days_into_cycle(resets_at, now).min(config.work_days);
     let ceiling = work_day_index as f64 * config.daily_budget;
 
-    let weekday_name = format!("{:?}", now.weekday())
-        .chars()
-        .take(3)
-        .collect::<String>();
+    let reset_day = reset_day_name(resets_at);
 
     let consumed_pct = budget.weekly.utilization;
     let remaining = ceiling - consumed_pct;
@@ -156,9 +154,9 @@ fn render_daily_pace_section<'a>(
         "todays-ceiling-detail",
         label = fl!("todays-ceiling"),
         ceiling = format!("{:.0}", ceiling),
-        weekday = weekday_name.as_str(),
         index = work_day_index.to_string(),
-        total = config.work_days.to_string()
+        total = config.work_days.to_string(),
+        resetDay = reset_day.as_str()
     );
     let consumed_text = fl!(
         "consumed-detail",

@@ -47,7 +47,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             poll_interval_secs: 300, // 5 minutes
-            work_days: 5,            // Monday-Friday (must be >= 1)
+            work_days: 5,            // Budget days per cycle (must be >= 1)
             daily_budget: 20.0,      // 20% per day for 5-day week = 100% total
             creds_path: "~/.claude/.credentials.json".to_string(),
             color_on_track: None,

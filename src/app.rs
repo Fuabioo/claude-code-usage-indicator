@@ -4,7 +4,7 @@ use crate::budget::{
 };
 use crate::config::{self, Config};
 use cosmic::cosmic_config::CosmicConfigEntry;
-use chrono::Local;
+use chrono::Utc;
 use cosmic::app::Core;
 use cosmic::iced::futures::StreamExt;
 use cosmic::iced::Subscription;
@@ -199,12 +199,12 @@ async fn fetch_and_compute(
     let token = read_token(&expanded_path)?;
     let usage = fetch_usage(&token, client).await?;
 
-    let now = Local::now();
     let weekly_color = compute_weekly_pace_color(
         usage.seven_day.utilization,
         daily_budget,
         work_days,
-        now,
+        usage.seven_day.resets_at,
+        Utc::now(),
     );
     let hourly_color = compute_hourly_color(usage.five_hour.utilization);
 
