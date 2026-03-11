@@ -1,13 +1,13 @@
 use super::types::PaceColor;
-use chrono::{DateTime, Datelike, Utc};
+use chrono::{DateTime, Datelike, Utc, Weekday};
 
 const CYCLE_LENGTH: i64 = 7;
 
 /// Computes the pace color for the weekly usage window.
 ///
-/// This implements the pace-based budgeting algorithm: given the current day of the billing cycle,
-/// compute a "ceiling" (how much budget should be consumed by now), then compare actual
-/// utilization to that ceiling.
+/// This implements the pace-based budgeting algorithm: given the current work day
+/// within the billing cycle, compute a "ceiling" (how much budget should be consumed
+/// by now), then compare actual utilization to that ceiling.
 ///
 /// # Arguments
 ///
@@ -29,7 +29,7 @@ pub fn compute_weekly_pace_color(
     resets_at: DateTime<Utc>,
     now: DateTime<Utc>,
 ) -> PaceColor {
-    let work_day_index = days_into_cycle(resets_at, now).min(work_days);
+    let work_day_index = days_into_cycle(resets_at, now, work_days);
     let ceiling = work_day_index as f64 * daily_budget;
 
     // Defensive: avoid division by zero
@@ -67,17 +67,48 @@ pub fn compute_hourly_color(utilization: f64) -> PaceColor {
     }
 }
 
-/// Derives the day index within the billing cycle from the API reset timestamp.
+/// Counts work days that have fully elapsed in the billing cycle.
 ///
-/// `days_into_cycle = CYCLE_LENGTH - floor(days_remaining)`.
-/// chrono's `num_days()` truncates toward zero, so this implicitly produces a
-/// ceiling-like effect on cycle position (e.g., 30min left → day 7).
+/// For `work_days <= 5`, only weekdays (Mon–Fri) are counted, matching a
+/// standard work week. For `work_days > 5`, all calendar days count.
 ///
-/// When `resets_at < now` (stale data), the result is clamped to CYCLE_LENGTH.
-pub fn days_into_cycle(resets_at: DateTime<Utc>, now: DateTime<Utc>) -> u8 {
-    let days_remaining = (resets_at - now).num_days();
-    let day = CYCLE_LENGTH - days_remaining;
-    (day as u8).clamp(1, CYCLE_LENGTH as u8)
+/// The cycle starts at `resets_at - 7 days`. Each full 24-hour period from
+/// cycle start is examined: if it falls on a weekday (and work_days <= 5),
+/// it increments the count.
+///
+/// Result is clamped to `[1, work_days]`.
+pub fn days_into_cycle(resets_at: DateTime<Utc>, now: DateTime<Utc>, work_days: u8) -> u8 {
+    let cycle_start = resets_at - chrono::Duration::days(CYCLE_LENGTH);
+
+    if now <= cycle_start {
+        return 1;
+    }
+
+    let full_days = (now - cycle_start).num_days().min(CYCLE_LENGTH) as u64;
+
+    if work_days > 5 {
+        // For 6-7 day schedules, all calendar days count
+        return (full_days as u8).clamp(1, work_days);
+    }
+
+    // On the last day of the cycle (6+ of 7 full days elapsed), all work days
+    // are available — the final partial day would otherwise be missed since
+    // num_days() truncates.
+    if full_days >= (CYCLE_LENGTH - 1) as u64 {
+        return work_days;
+    }
+
+    // Count weekdays (Mon-Fri) only
+    let mut weekday_count = 0u8;
+    for i in 0..full_days {
+        let day = cycle_start + chrono::Duration::days(i as i64);
+        match day.weekday() {
+            Weekday::Sat | Weekday::Sun => {}
+            _ => weekday_count += 1,
+        }
+    }
+
+    weekday_count.clamp(1, work_days)
 }
 
 /// Returns the abbreviated weekday name (3 chars) of the reset day.
@@ -99,51 +130,126 @@ mod tests {
     }
 
     // --- days_into_cycle tests ---
+    // Cycle: resets Thu Mar 14 09:00 → started Thu Mar 7 09:00
+    // Calendar:  Thu7  Fri8  Sat9  Sun10  Mon11  Tue12  Wed13
+    // Weekdays:  Thu   Fri   -     -      Mon    Tue    Wed  (5 weekdays)
 
     #[test]
     fn test_just_after_reset_is_day_1() {
-        // Reset is in ~7 days → day 1
-        let now = make_utc(2024, 3, 7, 12, 0); // Thursday noon
-        let resets_at = make_utc(2024, 3, 14, 9, 0); // Next Thursday 9am
-        assert_eq!(days_into_cycle(resets_at, now), 1);
+        // Thu Mar 7 12:00, cycle just started. 0 full days elapsed → clamp to 1.
+        let now = make_utc(2024, 3, 7, 12, 0);
+        let resets_at = make_utc(2024, 3, 14, 9, 0);
+        assert_eq!(days_into_cycle(resets_at, now, 5), 1);
     }
 
     #[test]
-    fn test_mid_cycle_is_day_4() {
-        // 3 days remaining → day 4
-        let now = make_utc(2024, 3, 11, 12, 0); // Monday noon
-        let resets_at = make_utc(2024, 3, 14, 9, 0); // Thursday 9am (2.875 days)
-        assert_eq!(days_into_cycle(resets_at, now), 5); // 7 - 2 = 5
+    fn test_one_weekday_elapsed() {
+        // Fri Mar 8 12:00, 1 full day since cycle start (Thu = weekday) → 1
+        let now = make_utc(2024, 3, 8, 12, 0);
+        let resets_at = make_utc(2024, 3, 14, 9, 0);
+        assert_eq!(days_into_cycle(resets_at, now, 5), 1);
     }
 
     #[test]
-    fn test_partial_day_boundary() {
-        // 1 day + 30 min remaining → num_days()=1 → day=7-1=6
-        let now = make_utc(2024, 3, 12, 20, 30);
-        let resets_at = make_utc(2024, 3, 14, 9, 0); // ~1.52 days
-        assert_eq!(days_into_cycle(resets_at, now), 6);
+    fn test_weekend_days_dont_count() {
+        // Sun Mar 10 12:00, 3 full days (Thu Fri Sat). Weekdays = Thu + Fri = 2
+        let now = make_utc(2024, 3, 10, 12, 0);
+        let resets_at = make_utc(2024, 3, 14, 9, 0);
+        assert_eq!(days_into_cycle(resets_at, now, 5), 2);
     }
 
     #[test]
-    fn test_thirty_minutes_until_reset_is_day_7() {
-        // 30 min remaining → num_days()=0 → day=7
+    fn test_monday_after_weekend() {
+        // Mon Mar 11 12:00, 4 full days (Thu Fri Sat Sun). Weekdays = Thu + Fri = 2
+        let now = make_utc(2024, 3, 11, 12, 0);
+        let resets_at = make_utc(2024, 3, 14, 9, 0);
+        assert_eq!(days_into_cycle(resets_at, now, 5), 2);
+    }
+
+    #[test]
+    fn test_tuesday_three_weekdays() {
+        // Tue Mar 12 12:00, 5 full days (Thu Fri Sat Sun Mon). Weekdays = Thu + Fri + Mon = 3
+        let now = make_utc(2024, 3, 12, 12, 0);
+        let resets_at = make_utc(2024, 3, 14, 9, 0);
+        assert_eq!(days_into_cycle(resets_at, now, 5), 3);
+    }
+
+    #[test]
+    fn test_last_day_of_cycle_returns_all_work_days() {
+        // Wed Mar 13 12:00, ~20h before reset. On the last day of the cycle,
+        // the full budget is available (no more work days to wait for).
+        let now = make_utc(2024, 3, 13, 12, 0);
+        let resets_at = make_utc(2024, 3, 14, 9, 0);
+        assert_eq!(days_into_cycle(resets_at, now, 5), 5);
+    }
+
+    #[test]
+    fn test_thirty_minutes_until_reset() {
+        // Thu Mar 14 08:30, 7 full days. All 5 weekdays counted.
         let now = make_utc(2024, 3, 14, 8, 30);
         let resets_at = make_utc(2024, 3, 14, 9, 0);
-        assert_eq!(days_into_cycle(resets_at, now), 7);
+        assert_eq!(days_into_cycle(resets_at, now, 5), 5);
     }
 
     #[test]
-    fn test_stale_resets_at_clamps_to_7() {
-        // resets_at is in the past
+    fn test_stale_resets_at_clamps_to_work_days() {
+        // Past the reset, full 7 days elapsed → 5 weekdays, clamped to work_days
         let now = make_utc(2024, 3, 15, 12, 0);
         let resets_at = make_utc(2024, 3, 14, 9, 0);
-        assert_eq!(days_into_cycle(resets_at, now), 7);
+        assert_eq!(days_into_cycle(resets_at, now, 5), 5);
     }
 
     #[test]
-    fn test_exactly_on_reset_is_day_7() {
+    fn test_exactly_on_reset() {
         let t = make_utc(2024, 3, 14, 9, 0);
-        assert_eq!(days_into_cycle(t, t), 7);
+        assert_eq!(days_into_cycle(t, t, 5), 5);
+    }
+
+    #[test]
+    fn test_work_days_3_clamps() {
+        // Tue Mar 12 12:00, 3 weekdays elapsed (Thu Fri Mon), but work_days=3 → clamp to 3
+        let now = make_utc(2024, 3, 12, 12, 0);
+        let resets_at = make_utc(2024, 3, 14, 9, 0);
+        assert_eq!(days_into_cycle(resets_at, now, 3), 3);
+    }
+
+    #[test]
+    fn test_work_days_7_counts_all_calendar_days() {
+        // Mon Mar 11 12:00, 4 full calendar days elapsed
+        let now = make_utc(2024, 3, 11, 12, 0);
+        let resets_at = make_utc(2024, 3, 14, 9, 0);
+        assert_eq!(days_into_cycle(resets_at, now, 7), 4);
+    }
+
+    #[test]
+    fn test_work_days_6_counts_all_calendar_days() {
+        // Wed Mar 13 12:00, 6 full calendar days → clamped to 6
+        let now = make_utc(2024, 3, 13, 12, 0);
+        let resets_at = make_utc(2024, 3, 14, 9, 0);
+        assert_eq!(days_into_cycle(resets_at, now, 6), 6);
+    }
+
+    #[test]
+    fn test_before_cycle_start_returns_1() {
+        let now = make_utc(2024, 3, 6, 12, 0);
+        let resets_at = make_utc(2024, 3, 14, 9, 0);
+        assert_eq!(days_into_cycle(resets_at, now, 5), 1);
+    }
+
+    // --- User's real scenario ---
+    // Cycle resets Fri Mar 13 16:00 UTC (10am Costa Rica)
+    // Cycle started: Fri Mar 6 16:00 UTC
+    // Now: Tue Mar 10 ~18:00 UTC
+    // Full days: 4 (Fri→Sat, Sat→Sun, Sun→Mon, Mon→Tue)
+    // Weekdays in those 4 periods: Fri + Mon = 2
+
+    #[test]
+    fn test_user_scenario_friday_reset_tuesday_now() {
+        let resets_at = make_utc(2026, 3, 13, 16, 0); // Fri Mar 13 16:00 UTC
+        let now = make_utc(2026, 3, 10, 18, 0); // Tue Mar 10 18:00 UTC
+        // Cycle started Fri Mar 6 16:00. Full days elapsed = 4.
+        // Day periods: Fri(wd), Sat(we), Sun(we), Mon(wd) → 2 weekdays
+        assert_eq!(days_into_cycle(resets_at, now, 5), 2);
     }
 
     // --- compute_weekly_pace_color tests ---
@@ -167,7 +273,7 @@ mod tests {
 
     #[test]
     fn test_end_of_cycle_ninety_five_percent_is_yellow() {
-        // day_index=7, clamped to work_days=5, ceiling=100, ratio=0.95
+        // Near reset: all 5 weekdays elapsed, ceiling=100, ratio=0.95
         let now = make_utc(2024, 3, 14, 8, 30);
         let resets_at = make_utc(2024, 3, 14, 9, 0);
         let color = compute_weekly_pace_color(95.0, 20.0, 5, resets_at, now);
@@ -192,7 +298,7 @@ mod tests {
 
     #[test]
     fn test_work_days_clamps_correctly() {
-        // work_days=3, day_index=5 clamped to 3. ceiling=3*33.33=99.99, ratio≈0.55
+        // Tue Mar 12, 3 weekdays elapsed, work_days=3, ceiling=3*33.33=99.99, ratio≈0.55
         let now = make_utc(2024, 3, 12, 12, 0);
         let resets_at = make_utc(2024, 3, 14, 9, 0);
         let color = compute_weekly_pace_color(55.0, 33.33, 3, resets_at, now);

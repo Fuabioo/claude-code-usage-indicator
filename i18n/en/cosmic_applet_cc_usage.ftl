@@ -23,6 +23,7 @@ over-by = Over by
 
 # Staleness indicators
 last-updated = Last updated: {$time} ago
+last-polled = Last polled: {$time} ago
 data-may-be-stale = Data may be stale
 loading-usage-data = Loading usage data...
 

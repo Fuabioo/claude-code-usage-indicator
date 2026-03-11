@@ -988,7 +988,6 @@ name = "cosmic-applet-cc-usage"
 version = "0.1.0"
 dependencies = [
  "chrono",
- "futures-util",
  "i18n-embed",
  "i18n-embed-fl",
  "libcosmic",

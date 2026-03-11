@@ -7,6 +7,7 @@ use cosmic::iced::Length;
 use cosmic::iced_core::Alignment;
 use cosmic::widget::text;
 use cosmic::{widget, Element};
+use std::time::Instant;
 
 /// Render the popup detail view (full budget dashboard).
 pub fn render(app: &AppModel, _id: cosmic::iced_core::window::Id) -> Element<'_, Message> {
@@ -36,7 +37,7 @@ fn render_dashboard<'a>(budget: &'a BudgetState, app: &'a AppModel) -> Element<'
         divider(),
         render_daily_pace_section(budget, config),
         divider(),
-        render_footer(budget, app.error.as_ref(), config),
+        render_footer(budget, app.error.as_ref(), app.last_attempted.as_ref(), config),
     ])
     .spacing(12)
     .padding(12)
@@ -124,7 +125,7 @@ fn render_daily_pace_section<'a>(
 ) -> Element<'a, Message> {
     let resets_at = budget.weekly.resets_at;
     let now = Utc::now();
-    let work_day_index = days_into_cycle(resets_at, now).min(config.work_days);
+    let work_day_index = days_into_cycle(resets_at, now, config.work_days);
     let ceiling = work_day_index as f64 * config.daily_budget;
 
     let reset_day = reset_day_name(resets_at);
@@ -179,18 +180,27 @@ fn render_daily_pace_section<'a>(
     .into()
 }
 
-/// Section 4: Footer
-fn render_footer<'a>(budget: &'a BudgetState, error: Option<&'a BudgetError>, config: &'a Config) -> Element<'a, Message> {
-    let elapsed = budget.last_updated.elapsed();
-    let elapsed_secs = elapsed.as_secs();
-
-    let elapsed_display = if elapsed_secs < 60 {
+/// Format an `Instant` elapsed duration as a human-readable string.
+fn format_elapsed(instant: &Instant) -> String {
+    let elapsed_secs = instant.elapsed().as_secs();
+    if elapsed_secs < 60 {
         format!("{}s", elapsed_secs)
     } else if elapsed_secs < 3600 {
         format!("{}m", elapsed_secs / 60)
     } else {
         format!("{}h", elapsed_secs / 3600)
-    };
+    }
+}
+
+/// Section 4: Footer
+fn render_footer<'a>(
+    budget: &'a BudgetState,
+    error: Option<&'a BudgetError>,
+    last_attempted: Option<&'a Instant>,
+    config: &'a Config,
+) -> Element<'a, Message> {
+    let elapsed_secs = budget.last_updated.elapsed().as_secs();
+    let elapsed_display = format_elapsed(&budget.last_updated);
     let last_updated_text = fl!("last-updated", time = elapsed_display);
 
     let freshness_color = if elapsed_secs < 600 {
@@ -208,6 +218,19 @@ fn render_footer<'a>(budget: &'a BudgetState, error: Option<&'a BudgetError>, co
             .spacing(4)
             .into(),
     ];
+
+    // Show last poll attempt if it differs meaningfully from last successful update
+    if let Some(attempted) = last_attempted {
+        let attempted_secs = attempted.elapsed().as_secs();
+        // Only show if the last attempt is more recent than the last success (i.e. there were failures)
+        if attempted_secs + 5 < elapsed_secs {
+            let attempted_display = format_elapsed(attempted);
+            let last_polled_text = fl!("last-polled", time = attempted_display);
+            footer_items.push(
+                text(last_polled_text).class(cosmic::theme::Text::Default).into(),
+            );
+        }
+    }
 
     if error.is_some() {
         footer_items.push(
