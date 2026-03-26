@@ -157,8 +157,8 @@ fn render_daily_pace_section<'a>(
         ceiling = format!("{:.0}", ceiling),
         index = work_day_index.to_string(),
         total = config.work_days.to_string(),
-        resetDay = reset_day.as_str()
     );
+    let resets_on_text = fl!("resets-on", resetDay = reset_day.as_str());
     let consumed_text = fl!(
         "consumed-detail",
         label = fl!("consumed"),
@@ -169,6 +169,9 @@ fn render_daily_pace_section<'a>(
     widget::column::with_children(vec![
         widget::text::heading(daily_budget_pace_text).into(),
         text(todays_ceiling_text)
+        .class(cosmic::theme::Text::Default)
+        .into(),
+        text(resets_on_text)
         .class(cosmic::theme::Text::Default)
         .into(),
         text(consumed_text)
