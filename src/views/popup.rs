@@ -253,7 +253,7 @@ fn render_error_dashboard<'a>(err: &'a BudgetError, config: &'a Config) -> Eleme
             fl!("error-credentials-not-found")
         }
         BudgetError::Unauthorized => fl!("error-unauthorized"),
-        BudgetError::RateLimited => fl!("error-rate-limited"),
+        BudgetError::RateLimited(_) => fl!("error-rate-limited"),
         BudgetError::Network(details) => fl!("error-network", details = details.as_str()),
         BudgetError::Parse(_) | BudgetError::CredentialsParse(_) => fl!("error-parse"),
         BudgetError::UnexpectedStatus(_) => fl!("error-unable-to-fetch"),

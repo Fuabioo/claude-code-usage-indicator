@@ -3,6 +3,10 @@ use reqwest::StatusCode;
 
 const API_URL: &str = "https://api.anthropic.com/api/oauth/usage";
 
+/// Maximum value accepted from the Retry-After header (seconds).
+/// Prevents absurd sleep durations from server bugs or unexpected values.
+const MAX_RETRY_AFTER_SECS: u64 = 300;
+
 /// Fetches current usage data from the Anthropic OAuth usage API.
 ///
 /// # Arguments
@@ -39,7 +43,18 @@ pub async fn fetch_usage(
             Ok(body)
         }
         StatusCode::UNAUTHORIZED => Err(BudgetError::Unauthorized),
-        StatusCode::TOO_MANY_REQUESTS => Err(BudgetError::RateLimited),
+        StatusCode::TOO_MANY_REQUESTS => {
+            // Only integer-seconds format supported; HTTP-date format intentionally
+            // unsupported (Anthropic's API uses integer seconds).
+            let retry_after = response
+                .headers()
+                .get("retry-after")
+                .and_then(|v| v.to_str().ok())
+                .and_then(|s| s.parse::<u64>().ok())
+                .unwrap_or(0)
+                .min(MAX_RETRY_AFTER_SECS);
+            Err(BudgetError::RateLimited(retry_after))
+        }
         status => Err(BudgetError::UnexpectedStatus(status.as_u16())),
     }
 }
@@ -61,8 +76,11 @@ mod tests {
         let err = BudgetError::Unauthorized;
         assert_eq!(err.to_string(), "unauthorized -- token may be expired");
 
-        let err = BudgetError::RateLimited;
-        assert_eq!(err.to_string(), "rate limited by API");
+        let err = BudgetError::RateLimited(0);
+        assert_eq!(err.to_string(), "rate limited by API (retry after 0s)");
+
+        let err = BudgetError::RateLimited(60);
+        assert_eq!(err.to_string(), "rate limited by API (retry after 60s)");
 
         let err = BudgetError::UnexpectedStatus(500);
         assert_eq!(err.to_string(), "unexpected HTTP status: 500");

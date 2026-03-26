@@ -52,8 +52,8 @@ pub enum BudgetError {
     #[error("unauthorized -- token may be expired")]
     Unauthorized,
 
-    #[error("rate limited by API")]
-    RateLimited,
+    #[error("rate limited by API (retry after {0}s)")]
+    RateLimited(u64),
 
     #[error("unexpected HTTP status: {0}")]
     UnexpectedStatus(u16),
