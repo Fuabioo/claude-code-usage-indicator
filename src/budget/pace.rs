@@ -111,12 +111,10 @@ pub fn days_into_cycle(resets_at: DateTime<Utc>, now: DateTime<Utc>, work_days: 
     weekday_count.clamp(1, work_days)
 }
 
-/// Returns the abbreviated weekday name (3 chars) of the reset day.
+/// Returns the reset day as "Wed Apr 1" style string to avoid ambiguity
+/// about *which* occurrence of the weekday is meant.
 pub fn reset_day_name(resets_at: DateTime<Utc>) -> String {
-    format!("{:?}", resets_at.weekday())
-        .chars()
-        .take(3)
-        .collect()
+    resets_at.format("%a %b %-d").to_string()
 }
 
 #[cfg(test)]
@@ -342,6 +340,6 @@ mod tests {
     #[test]
     fn test_reset_day_name_thursday() {
         let resets_at = make_utc(2024, 3, 14, 9, 0); // Thursday
-        assert_eq!(reset_day_name(resets_at), "Thu");
+        assert_eq!(reset_day_name(resets_at), "Thu Mar 14");
     }
 }
