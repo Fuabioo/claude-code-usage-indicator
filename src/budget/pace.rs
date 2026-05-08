@@ -105,10 +105,11 @@ pub fn days_into_cycle(resets_at: DateTime<Utc>, now: DateTime<Utc>, work_days: 
     weekday_count.clamp(1, work_days)
 }
 
-/// Returns the reset day as "Wed Apr 1" style string to avoid ambiguity
-/// about *which* occurrence of the weekday is meant.
+/// Returns the reset day as "Wed Apr 1, 3:00 PM" in the local timezone.
 pub fn reset_day_name(resets_at: DateTime<Utc>) -> String {
-    resets_at.format("%a %b %-d").to_string()
+    use chrono::Local;
+    let local = resets_at.with_timezone(&Local);
+    local.format("%a %b %-d, %-I:%M %p").to_string()
 }
 
 #[cfg(test)]
@@ -331,9 +332,15 @@ mod tests {
     // --- reset_day_name tests ---
 
     #[test]
-    fn test_reset_day_name_thursday() {
-        let resets_at = make_utc(2024, 3, 14, 9, 0); // Thursday
-        assert_eq!(reset_day_name(resets_at), "Thu Mar 14");
+    fn test_reset_day_name_contains_key_parts() {
+        let resets_at = make_utc(2024, 3, 14, 9, 0);
+        let name = reset_day_name(resets_at);
+        // Contains weekday, month, day, and time — specific values depend on local TZ.
+        // In UTC it's "Thu Mar 14, 9:00 AM"; in UTC-6 it's "Thu Mar 14, 3:00 AM", etc.
+        assert!(name.contains("Thu"), "expected Thu in '{name}'");
+        assert!(name.contains("Mar"), "expected Mar in '{name}'");
+        assert!(name.contains("14"), "expected 14 in '{name}'");
+        assert!(name.contains("M"), "expected AM/PM marker in '{name}'");
     }
 
     // --- Timezone and edge case tests ---

@@ -35,7 +35,7 @@ fn main() -> cosmic::iced::Result {
 /// Useful for auditing pace labels and ceiling math.
 fn run_status() -> Result<(), Box<dyn std::error::Error>> {
     use budget::{compute_hourly_color, compute_weekly_pace_color, days_into_cycle, fetch_usage, format_duration, read_token, reset_day_name};
-    use chrono::Utc;
+    use chrono::{Local, Utc};
     use cosmic::cosmic_config::CosmicConfigEntry;
 
     const APP_ID: &str = "dev.fuabioo.CosmicAppletCcUsage";
@@ -77,8 +77,10 @@ fn run_status() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("=== Budget Status ===");
     println!();
-    println!("now           = {}", now);
-    println!("resets_at     = {} ({})", usage.seven_day.resets_at, reset_day_name(usage.seven_day.resets_at));
+    println!("now (UTC)     = {}", now);
+    println!("now (local)   = {}", now.with_timezone(&Local));
+    println!("resets_at (UTC)= {}", usage.seven_day.resets_at);
+    println!("resets (local)  = {}", reset_day_name(usage.seven_day.resets_at));
     println!();
     println!("[Config]");
     println!("  daily_budget     = {}% per work day", config.daily_budget);
@@ -99,6 +101,7 @@ fn run_status() -> Result<(), Box<dyn std::error::Error>> {
     println!("  utilization      = {:.1}%", usage.five_hour.utilization);
     println!("  pace_color       = {:?}", hourly_color);
     println!("  resets_in        = {}", format_duration(usage.five_hour.resets_at.signed_duration_since(now)));
+    println!("  resets (local)   = {}", usage.five_hour.resets_at.with_timezone(&Local).format("%a %b %-d, %-I:%M %p"));
 
     Ok(())
 }
