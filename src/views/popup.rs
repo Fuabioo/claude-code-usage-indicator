@@ -3,11 +3,41 @@ use crate::budget::{days_into_cycle, format_duration, reset_day_name, BudgetErro
 use crate::config::Config;
 use crate::fl;
 use chrono::Utc;
-use cosmic::iced::Length;
-use cosmic::iced::Alignment;
+use cosmic::iced::widget::progress_bar::Style as ProgressBarStyle;
+use cosmic::iced::widget::ProgressBar;
+use cosmic::iced::{Alignment, Background, Border, Length};
 use cosmic::widget::text;
 use cosmic::{widget, Element};
 use std::time::Instant;
+
+/// Build a determinate progress bar whose fill color reflects the pace.
+///
+/// The COSMIC `Theme`'s native linear-progress widget derives its bar color
+/// solely from the theme accent (its `StyleSheet::Style = ()` ignores any custom
+/// styling), so per-pace coloring is impossible through that widget. Instead we
+/// use the underlying iced [`ProgressBar`], which exposes a per-instance
+/// [`Catalog`](cosmic::iced::widget::progress_bar::Catalog) class. We resolve the
+/// pace color via [`Config::resolve_pace_color`] (honoring user overrides) and
+/// keep the native track/border by mirroring the theme's default appearance.
+fn pace_progress_bar<'a>(pct: f64, color: &PaceColor, config: &Config) -> Element<'a, Message> {
+    let bar_color = config.resolve_pace_color(color);
+
+    ProgressBar::new(0.0..=100.0, pct as f32)
+        .length(Length::Fill)
+        .class(cosmic::theme::ProgressBar::custom(move |theme| {
+            let cosmic = theme.cosmic();
+            ProgressBarStyle {
+                background: Background::Color(cosmic::iced::Color::from(cosmic.background.divider)),
+                bar: Background::Color(bar_color),
+                border: Border {
+                    radius: cosmic.corner_radii.radius_xl.into(),
+                    color: cosmic::iced::Color::TRANSPARENT,
+                    width: 0.0,
+                },
+            }
+        }))
+        .into()
+}
 
 /// Render the popup detail view (full budget dashboard).
 pub fn render(app: &AppModel, _id: cosmic::iced::window::Id) -> Element<'_, Message> {
@@ -67,9 +97,7 @@ fn render_weekly_section<'a>(budget: &'a BudgetState, config: &'a Config) -> Ele
 
     widget::column::with_children(vec![
         widget::text::heading(weekly_budget_text).into(),
-        cosmic::widget::progress_bar::determinate_linear((pct as f32 / 100.0).clamp(0.0, 1.0))
-            .width(Length::Fill)
-            .into(),
+        pace_progress_bar(pct, color, config),
         widget::row::with_children(vec![
             text(format!("{:.0}%", pct))
                 .class(cosmic::theme::Text::Color(config.resolve_pace_color(color)))
@@ -103,9 +131,7 @@ fn render_hourly_section<'a>(budget: &'a BudgetState, config: &'a Config) -> Ele
 
     widget::column::with_children(vec![
         widget::text::heading(hourly_session_text).into(),
-        cosmic::widget::progress_bar::determinate_linear((pct as f32 / 100.0).clamp(0.0, 1.0))
-            .width(Length::Fill)
-            .into(),
+        pace_progress_bar(pct, color, config),
         widget::row::with_children(vec![
             text(format!("{:.0}%", pct))
                 .class(cosmic::theme::Text::Color(config.resolve_pace_color(color)))
