@@ -7,7 +7,7 @@ description = "COSMIC panel applet for monitoring Claude Code usage budget"
 
 [dependencies]
 # COSMIC / GUI
-libcosmic = { git = "https://github.com/pop-os/libcosmic.git", rev = "3e78eb238159d90956e85e95e868164671b649f6", features = [
+libcosmic = { git = "https://github.com/pop-os/libcosmic.git", rev = "59bebbdffeb8ed4abd3f2577c099745b9a2f2c37", features = [
     "applet",
     "applet-token",
     "tokio",

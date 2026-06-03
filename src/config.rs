@@ -2,7 +2,7 @@
 // generates code referencing `cosmic_config::` as a bare crate path.
 use cosmic::cosmic_config;
 use cosmic::cosmic_config::{CosmicConfigEntry, cosmic_config_derive::CosmicConfigEntry};
-use cosmic::iced_core::Color;
+use cosmic::iced::Color;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -19,7 +19,7 @@ pub struct ConfigColor {
 
 impl ConfigColor {
     pub fn to_iced_color(&self) -> Color {
-        Color::new(self.r, self.g, self.b, self.a)
+        Color::from_rgba(self.r, self.g, self.b, self.a)
     }
 }
 

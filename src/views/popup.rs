@@ -4,13 +4,13 @@ use crate::config::Config;
 use crate::fl;
 use chrono::Utc;
 use cosmic::iced::Length;
-use cosmic::iced_core::Alignment;
+use cosmic::iced::Alignment;
 use cosmic::widget::text;
 use cosmic::{widget, Element};
 use std::time::Instant;
 
 /// Render the popup detail view (full budget dashboard).
-pub fn render(app: &AppModel, _id: cosmic::iced_core::window::Id) -> Element<'_, Message> {
+pub fn render(app: &AppModel, _id: cosmic::iced::window::Id) -> Element<'_, Message> {
     let content = match (&app.budget, &app.error) {
         (Some(budget), _) => render_dashboard(budget, app),
         (None, Some(err)) => render_error_dashboard(err, &app.config),
@@ -67,7 +67,9 @@ fn render_weekly_section<'a>(budget: &'a BudgetState, config: &'a Config) -> Ele
 
     widget::column::with_children(vec![
         widget::text::heading(weekly_budget_text).into(),
-        cosmic::widget::progress_bar(0.0..=100.0, pct as f32).class(pace_color_to_progress(*color)).into(),
+        cosmic::widget::progress_bar::determinate_linear((pct as f32 / 100.0).clamp(0.0, 1.0))
+            .width(Length::Fill)
+            .into(),
         widget::row::with_children(vec![
             text(format!("{:.0}%", pct))
                 .class(cosmic::theme::Text::Color(config.resolve_pace_color(color)))
@@ -101,7 +103,9 @@ fn render_hourly_section<'a>(budget: &'a BudgetState, config: &'a Config) -> Ele
 
     widget::column::with_children(vec![
         widget::text::heading(hourly_session_text).into(),
-        cosmic::widget::progress_bar(0.0..=100.0, pct as f32).class(pace_color_to_progress(*color)).into(),
+        cosmic::widget::progress_bar::determinate_linear((pct as f32 / 100.0).clamp(0.0, 1.0))
+            .width(Length::Fill)
+            .into(),
         widget::row::with_children(vec![
             text(format!("{:.0}%", pct))
                 .class(cosmic::theme::Text::Color(config.resolve_pace_color(color)))
@@ -284,13 +288,4 @@ fn render_loading_dashboard() -> Element<'static, Message> {
     .spacing(12)
     .padding(12)
     .into()
-}
-
-/// Map PaceColor to COSMIC progress bar style.
-fn pace_color_to_progress(color: PaceColor) -> cosmic::theme::ProgressBar {
-    match color {
-        PaceColor::Green => cosmic::theme::ProgressBar::Success,
-        PaceColor::Yellow => cosmic::theme::ProgressBar::Primary,
-        PaceColor::Red => cosmic::theme::ProgressBar::Danger,
-    }
 }
