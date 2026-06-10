@@ -1,0 +1,60 @@
+# GoReleaser config for the cross-platform `cc-usage` CLI.
+#
+# GoReleaser is Go-oriented, but v2 ships a Rust builder (uses cargo-zigbuild) that handles
+# the CLI fine. The macOS menu bar app is NOT built here — it's distributed as a
+# build-from-source Homebrew formula (packaging/homebrew/cc-usage-menubar.rb), since this is
+# a pet project with no Apple Developer ID / notarization.
+#
+# Validate locally before tagging:  goreleaser check  &&  goreleaser release --snapshot --clean
+# (The Rust builder is newer than the Go one; expect to tweak target/arch naming if needed.)
+version: 2
+
+project_name: cc-usage
+
+builds:
+  - id: cc-usage
+    builder: rust
+    binary: cc-usage
+    # cargo-zigbuild (the rust builder's default tool) cross-compiles all four from Linux.
+    # The workspace's default-members exclude the COSMIC applet, so only the CLI + core build.
+    targets:
+      - x86_64-unknown-linux-gnu
+      - aarch64-unknown-linux-gnu
+      - x86_64-apple-darwin
+      - aarch64-apple-darwin
+    flags:
+      - --release
+      - -p=cc-usage-cli
+
+archives:
+  - id: cc-usage
+    formats: [tar.gz]
+    # Title-cased OS to match the existing tap convention (e.g. cc-usage_Darwin_amd64.tar.gz).
+    name_template: "{{ .ProjectName }}_{{ title .Os }}_{{ .Arch }}"
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: "checksums.txt"
+
+# Publishes a CLI cask to your tap (GoReleaser deprecated `brews` in favor of casks).
+# Requires a HOMEBREW_TAP_GITHUB_TOKEN secret (a PAT with write access to the tap repo —
+# the default GITHUB_TOKEN can't push to another repository).
+homebrew_casks:
+  - name: cc-usage
+    repository:
+      owner: Fuabioo
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    homepage: "https://github.com/Fuabioo/claude-code-usage-indicator"
+    description: "Claude Code usage budget CLI — JSON snapshot or human-readable status"
+
+release:
+  github:
+    owner: Fuabioo
+    name: claude-code-usage-indicator
+
+changelog:
+  use: github
+  sort: asc

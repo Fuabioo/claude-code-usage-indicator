@@ -174,6 +174,21 @@ This runs the app's headless `--render-swatches DIR` mode, which exits before cr
 menu bar item. (`ProgressView` bars don't snapshot correctly under the offscreen renderer —
 that's a rendering-only artifact, not how the live popover looks.)
 
+### Releasing
+
+Pushing a `v*` tag runs [`.github/workflows/release.yml`](.github/workflows/release.yml),
+which uses [GoReleaser](https://goreleaser.com) (config in
+[`.goreleaser.yaml`](.goreleaser.yaml)) to cross-compile the `cc-usage` CLI for Linux and
+macOS (via `cargo-zigbuild`), publish a GitHub release with archives + checksums, and update
+the `cc-usage` Homebrew cask in the tap.
+
+- Validate the config locally with `goreleaser check`.
+- Requires a `HOMEBREW_TAP_GITHUB_TOKEN` repo secret — a PAT with write access to the tap repo
+  (the built-in `GITHUB_TOKEN` cannot push to another repository).
+- Only the **CLI** is released this way. The macOS **menu bar app** is intentionally not
+  shipped prebuilt (no Apple Developer ID / notarization); it stays a build-from-source
+  Homebrew formula — see [`packaging/homebrew/cc-usage-menubar.rb`](packaging/homebrew/cc-usage-menubar.rb).
+
 ## License
 
 MIT
