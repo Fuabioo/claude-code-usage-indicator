@@ -1,3 +1,6 @@
+[workspace]
+members = ["crates/cc-usage-budget"]
+
 [package]
 name = "cosmic-applet-cc-usage"
 version = "0.1.0"
@@ -6,6 +9,9 @@ license = "MIT"
 description = "COSMIC panel applet for monitoring Claude Code usage budget"
 
 [dependencies]
+# Reusable, platform-agnostic budget logic (credentials, usage API, pace math)
+cc-usage-budget = { path = "crates/cc-usage-budget" }
+
 # COSMIC / GUI
 libcosmic = { git = "https://github.com/pop-os/libcosmic.git", rev = "59bebbdffeb8ed4abd3f2577c099745b9a2f2c37", features = [
     "applet",
@@ -18,7 +24,7 @@ libcosmic = { git = "https://github.com/pop-os/libcosmic.git", rev = "59bebbdffe
 # Async
 tokio = { version = "1", features = ["time"] }
 
-# HTTP
+# HTTP (applet builds the shared reqwest::Client passed into cc-usage-budget)
 reqwest = { version = "0.12", default-features = false, features = [
     "rustls-tls",
     "json",
@@ -26,7 +32,6 @@ reqwest = { version = "0.12", default-features = false, features = [
 
 # Serialization
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
 
 # Time
 chrono = { version = "0.4", features = ["serde"] }
@@ -36,11 +41,5 @@ i18n-embed = { version = "0.16", features = ["fluent-system", "desktop-requester
 i18n-embed-fl = "0.10"
 rust-embed = "8"
 
-# Error handling
-thiserror = "2"
-
 # Config persistence
 ron = "0.12"
-
-[dev-dependencies]
-tempfile = "3"

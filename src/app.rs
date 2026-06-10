@@ -1,4 +1,4 @@
-use crate::budget::{
+use cc_usage_budget::{
     compute_hourly_color, compute_weekly_pace_color, fetch_usage, read_token, BudgetError,
     BudgetState, WindowState,
 };

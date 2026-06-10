@@ -1,5 +1,5 @@
 use crate::app::{AppModel, Message};
-use crate::budget::{format_duration, BudgetState};
+use cc_usage_budget::{format_duration, BudgetState};
 use crate::config::Config;
 use crate::fl;
 use cosmic::iced::{window, Rectangle};

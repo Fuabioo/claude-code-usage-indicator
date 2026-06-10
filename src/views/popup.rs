@@ -1,5 +1,5 @@
 use crate::app::{AppModel, Message};
-use crate::budget::{days_into_cycle, format_duration, reset_day_name, BudgetError, BudgetState, PaceColor};
+use cc_usage_budget::{days_into_cycle, format_duration, reset_day_name, BudgetError, BudgetState, PaceColor};
 use crate::config::Config;
 use crate::fl;
 use chrono::Utc;

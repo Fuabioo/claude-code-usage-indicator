@@ -90,11 +90,11 @@ impl Config {
     }
 
     /// Resolve a PaceColor enum to an iced Color using config overrides or theme defaults.
-    pub fn resolve_pace_color(&self, color: &crate::budget::PaceColor) -> Color {
+    pub fn resolve_pace_color(&self, color: &cc_usage_budget::PaceColor) -> Color {
         match color {
-            crate::budget::PaceColor::Green => self.resolve_on_track_color(),
-            crate::budget::PaceColor::Yellow => self.resolve_warning_color(),
-            crate::budget::PaceColor::Red => self.resolve_over_budget_color(),
+            cc_usage_budget::PaceColor::Green => self.resolve_on_track_color(),
+            cc_usage_budget::PaceColor::Yellow => self.resolve_warning_color(),
+            cc_usage_budget::PaceColor::Red => self.resolve_over_budget_color(),
         }
     }
 }

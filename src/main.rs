@@ -1,5 +1,4 @@
 mod app;
-mod budget;
 mod config;
 mod i18n;
 mod views;
@@ -34,7 +33,7 @@ fn main() -> cosmic::iced::Result {
 /// Diagnostic mode: fetch usage and print all intermediate calculations.
 /// Useful for auditing pace labels and ceiling math.
 fn run_status() -> Result<(), Box<dyn std::error::Error>> {
-    use budget::{compute_hourly_color, compute_weekly_pace_color, days_into_cycle, fetch_usage, format_duration, read_token, reset_day_name};
+    use cc_usage_budget::{compute_hourly_color, compute_weekly_pace_color, days_into_cycle, fetch_usage, format_duration, read_token, reset_day_name};
     use chrono::{Local, Utc};
     use cosmic::cosmic_config::CosmicConfigEntry;
 
