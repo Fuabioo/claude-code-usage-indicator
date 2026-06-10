@@ -8,15 +8,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusController: StatusItemController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Headless verification mode (no status item): `CcUsageMenuBar --render-swatches DIR`.
+        // Handled here (rather than before app launch) so it runs in this main-actor context,
+        // which `ImageRenderer` requires; we exit before creating any menu bar item.
+        if let i = CommandLine.arguments.firstIndex(of: "--render-swatches"), i + 1 < CommandLine.arguments.count {
+            SwatchRenderer.run(outputDir: CommandLine.arguments[i + 1])
+            exit(0)
+        }
+
         statusController = StatusItemController(controller: dataController)
         dataController.start()
     }
-}
-
-// Headless verification mode (no status item): `CcUsageMenuBar --render-swatches DIR`.
-if let i = CommandLine.arguments.firstIndex(of: "--render-swatches"), i + 1 < CommandLine.arguments.count {
-    SwatchRenderer.run(outputDir: CommandLine.arguments[i + 1])
-    exit(0)
 }
 
 let app = NSApplication.shared

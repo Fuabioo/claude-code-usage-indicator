@@ -7,9 +7,10 @@ import SwiftUI
 ///
 /// It exits before any `NSStatusItem` is created, so it never registers a menu bar item.
 enum SwatchRenderer {
+    /// Main-actor isolated because `ImageRenderer` is; call from a main-actor context
+    /// (e.g. `applicationDidFinishLaunching`).
+    @MainActor
     static func run(outputDir: String) {
-        _ = NSApplication.shared // initialize AppKit for rendering
-
         let mock = mockSnapshot()
         let cases: [(label: String, scheme: ColorScheme, appearance: NSAppearance.Name, bg: Color)] = [
             ("light", .light, .aqua, .white),
