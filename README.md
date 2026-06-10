@@ -40,7 +40,9 @@ macOS out of the box.
 
 ## Build & install
 
-Uses [`just`](https://github.com/casey/just); recipes auto-dispatch per OS.
+End users don't need [`just`](https://github.com/casey/just) — install via Homebrew (macOS,
+below) or the raw `cargo`/`swift` commands. `just` is only a developer convenience that wraps
+those commands and auto-dispatches per OS:
 
 ```sh
 just build      # build the CLI + this platform's GUI
@@ -60,17 +62,50 @@ just install-system-linux  # system-wide (requires sudo)
 `just install` auto-dispatches to the Linux recipe (`install-linux`); there are matching
 `uninstall-linux` / `uninstall-system-linux` recipes.
 
+**Starting with the desktop:** add the applet to your COSMIC panel (Panel settings → add
+applet). The panel launches and manages it as part of your desktop session — there is no
+separate login item to configure. This is unlike macOS (see below), where a menu bar app is
+its own process that must opt into launching at login.
+
 ### macOS (menu bar app)
 
-Requires a Rust toolchain and the Swift toolchain (Xcode command line tools).
+Install from a Homebrew tap (no `just` required — it builds the CLI and app from source, so
+no Apple notarization is involved either):
 
 ```sh
-just run-macos          # build, bundle, and launch
-just install-macos      # copy CcUsageMenuBar.app into ~/Applications
+brew install fuabioo/tap/cc-usage-menubar
+open -a CcUsageMenuBar          # first launch adds the menu bar item
 ```
 
-The build assembles a self-contained `CcUsageMenuBar.app` (ad-hoc signed) with the `cc-usage`
-CLI bundled inside it.
+Requires the Rust toolchain (pulled in by the formula) and the Swift toolchain from the Xcode
+Command Line Tools (`xcode-select --install`). A formula template lives at
+[`packaging/homebrew/cc-usage-menubar.rb`](packaging/homebrew/cc-usage-menubar.rb).
+
+<details>
+<summary>Build from source without Homebrew</summary>
+
+With `just`: `just run-macos` (build + bundle + launch) or `just install-macos` (copy the
+`.app` into `~/Applications`). Without `just`, run the same steps directly:
+
+```sh
+cargo build --release -p cc-usage-cli
+swift build -c release --package-path macos/CcUsageMenuBar
+# then assemble CcUsageMenuBar.app (Swift binary + macos/CcUsageMenuBar/Resources/Info.plist
+# + the cc-usage binary in Contents/Resources) and `codesign --sign -` it.
+```
+
+</details>
+
+The result is a self-contained `CcUsageMenuBar.app` (ad-hoc signed) with the `cc-usage` CLI
+bundled inside it.
+
+#### Launching at login
+
+macOS menu bar apps don't auto-start on their own. The go-to way is the app's own toggle:
+**right-click the menu bar item → "Launch at Login"** (uses `SMAppService`; appears under
+System Settings → General → Login Items). Alternatively, if you installed via the formula,
+`brew services start cc-usage-menubar` registers a login agent. (On COSMIC there's no
+equivalent step — the panel starts the applet for you.)
 
 > **macOS credentials note:** Claude Code on macOS stores its OAuth token in the **login
 > Keychain**, not in `~/.claude/.credentials.json` (the Linux location). The CLI/app read it

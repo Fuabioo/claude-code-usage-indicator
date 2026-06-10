@@ -1,5 +1,6 @@
 import AppKit
 import Combine
+import ServiceManagement
 import SwiftUI
 
 /// Owns the menu bar item. Renders the at-a-glance status directly into the bar button
@@ -85,6 +86,13 @@ final class StatusItemController {
     private func showMenu() {
         let menu = NSMenu()
         menu.addItem(withTitle: "Refresh", action: #selector(refresh), keyEquivalent: "r").target = self
+
+        let launch = NSMenuItem(title: "Launch at Login",
+                                action: #selector(toggleLaunchAtLogin), keyEquivalent: "")
+        launch.target = self
+        launch.state = (SMAppService.mainApp.status == .enabled) ? .on : .off
+        menu.addItem(launch)
+
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit", action: #selector(quit), keyEquivalent: "q").target = self
 
@@ -95,6 +103,21 @@ final class StatusItemController {
 
     @objc private func refresh() { controller.refresh() }
     @objc private func quit() { NSApp.terminate(nil) }
+
+    /// Register/unregister the app as a macOS login item via ServiceManagement (macOS 13+).
+    /// Surfaces in System Settings → General → Login Items. No effect when run as a raw
+    /// binary (it must be a launched .app bundle).
+    @objc private func toggleLaunchAtLogin() {
+        do {
+            if SMAppService.mainApp.status == .enabled {
+                try SMAppService.mainApp.unregister()
+            } else {
+                try SMAppService.mainApp.register()
+            }
+        } catch {
+            NSLog("CcUsageMenuBar: Launch at Login toggle failed: \(error.localizedDescription)")
+        }
+    }
 
     // MARK: - Bar rendering
 
