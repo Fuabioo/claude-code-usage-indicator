@@ -13,6 +13,7 @@ final class StatusItemController {
     private let hostingController: NSHostingController<DashboardView>
     private let controller: DataController
     private var cancellables = Set<AnyCancellable>()
+    private var appearanceObservation: NSKeyValueObservation?
 
     init(controller: DataController) {
         self.controller = controller
@@ -33,6 +34,13 @@ final class StatusItemController {
             button.target = self
             button.action = #selector(handleClick(_:))
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+
+            // The bar image is a baked bitmap, so it won't recolor on its own when the
+            // button's effective appearance changes (system Light/Dark toggle, wallpaper /
+            // reduce-transparency change). Observe it and regenerate so the bar tracks it.
+            appearanceObservation = button.observe(\.effectiveAppearance, options: [.new]) { [weak self] _, _ in
+                DispatchQueue.main.async { self?.updateBar() }
+            }
         }
 
         // Redraw the bar whenever data changes.
