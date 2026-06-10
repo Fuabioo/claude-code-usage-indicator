@@ -22,6 +22,16 @@ final class DataController: ObservableObject {
     private var timer: Timer?
     private let decoder = JSONDecoder.ccUsage()
 
+    init() {}
+
+    /// Seed a controller with a fixed snapshot (used by the headless `--render-swatches`
+    /// verification mode); does not poll.
+    init(previewSnapshot: UsageSnapshot) {
+        self.snapshot = previewSnapshot
+        if !previewSnapshot.isError { self.lastGood = previewSnapshot }
+        self.lastUpdated = previewSnapshot.fetchedAt
+    }
+
     /// Effective poll interval: from the latest config, else 300s.
     private var pollInterval: TimeInterval {
         TimeInterval(snapshot?.config.pollIntervalSecs ?? 300)

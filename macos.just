@@ -37,3 +37,12 @@ run-macos: bundle-macos
 [macos]
 cli *ARGS:
     cargo run -q -p cc-usage-cli -- {{ARGS}}
+
+# Render the dashboard to dashboard-{light,dark}.png in DIR (default target/macos) for a
+# visual check that the adaptive pace colors keep enough contrast in both appearances.
+[macos]
+swatches DIR='target/macos':
+    cd {{swift-dir}} && swift build 2>/dev/null
+    mkdir -p {{DIR}}
+    {{swift-dir}}/.build/debug/CcUsageMenuBar --render-swatches {{absolute_path(DIR)}}
+    @echo "Wrote {{DIR}}/dashboard-light.png and dashboard-dark.png"

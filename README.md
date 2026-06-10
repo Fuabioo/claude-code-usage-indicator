@@ -118,6 +118,27 @@ echo 'Some((r:0.3,g:0.85,b:0.4,a:1.0))' > ~/.config/cosmic/dev.fuabioo.CosmicApp
 Available fields: `color_on_track`, `color_warning`, `color_over_budget`. To revert to theme
 defaults, delete the file or set its contents to `None`.
 
+On **macOS** the pace colors are not configurable; the app derives appearance-adaptive
+colors (a darker, contrast-correct variant in Light mode and a brighter one in Dark mode) and
+follows the system Light/Dark/Auto setting automatically — analogous to how the COSMIC applet
+inherits its theme.
+
+## Development
+
+### Verifying macOS pace-color contrast
+
+The macOS app can render its dashboard to PNGs in both appearances so you can eyeball the
+foreground/background contrast of the green/amber/red pace colors without opening the popover:
+
+```sh
+just swatches            # writes target/macos/dashboard-{light,dark}.png
+just swatches /tmp       # or choose an output directory
+```
+
+This runs the app's headless `--render-swatches DIR` mode, which exits before creating any
+menu bar item. (`ProgressView` bars don't snapshot correctly under the offscreen renderer —
+that's a rendering-only artifact, not how the live popover looks.)
+
 ## License
 
 MIT

@@ -121,7 +121,7 @@ final class StatusItemController {
 
     private static func errorImage() -> NSImage {
         let font = NSFont.systemFont(ofSize: 13, weight: .medium)
-        let attributed = segment("⚠ CC", color: .systemRed, font: font)
+        let attributed = segment("⚠ CC", color: PaceColor.red.nsColor, font: font)
         return render(attributed)
     }
 
@@ -134,17 +134,21 @@ final class StatusItemController {
         NSAttributedString(string: s, attributes: [.foregroundColor: color, .font: font])
     }
 
-    /// Rasterize an attributed string into a non-template (colored) menu bar image.
+    /// Build a non-template (colored) menu bar image from an attributed string.
+    ///
+    /// Uses a drawing-handler image rather than a one-shot raster: AppKit re-invokes the
+    /// handler in the button's current drawing appearance, so the adaptive pace colors
+    /// resolve correctly AND the bar re-draws automatically when the user toggles Light/Dark.
     private static func render(_ attributed: NSAttributedString) -> NSImage {
         let size = attributed.size()
         let height: CGFloat = 18 // fits the ~22pt menu bar with padding
         let imageSize = NSSize(width: ceil(size.width), height: height)
 
-        let image = NSImage(size: imageSize)
-        image.lockFocus()
-        let y = (height - size.height) / 2
-        attributed.draw(at: NSPoint(x: 0, y: y))
-        image.unlockFocus()
+        let image = NSImage(size: imageSize, flipped: false) { _ in
+            let y = (height - size.height) / 2
+            attributed.draw(at: NSPoint(x: 0, y: y))
+            return true
+        }
         image.isTemplate = false // keep our colors; do not let the system tint it
         return image
     }

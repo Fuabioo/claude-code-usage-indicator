@@ -1,25 +1,50 @@
+import AppKit
 import Foundation
 import SwiftUI
 
 /// Pace color contract shared with `cc-usage --json` ("green"/"yellow"/"red").
+///
+/// We deliberately do NOT use the stock `.systemGreen`/`.systemYellow` colors: those are
+/// tuned as UI element fills and lose contrast as text on the light popover background
+/// (yellow especially). COSMIC gets contrast for free from its theme's success/warning/
+/// destructive roles; on macOS we mirror that by resolving each pace to an appearance-aware
+/// color — a darker, saturated variant in Light mode and a brighter one in Dark mode — so
+/// text stays legible whether the app is following the system Light, Dark, or Auto theme.
 enum PaceColor: String, Codable {
     case green, yellow, red
 
-    /// Color for the SwiftUI dashboard.
-    var swiftUIColor: Color {
+    /// Appearance-adaptive AppKit color (used for the menu bar drawing and, via
+    /// `swiftUIColor`, the dashboard). Resolves per the active Light/Dark appearance.
+    var nsColor: NSColor {
         switch self {
-        case .green: return .green
-        case .yellow: return .yellow
-        case .red: return .red
+        // light variant: contrast-correct on a light background; dark variant: brighter.
+        case .green:
+            return .paceAdaptive(light: (0.082, 0.502, 0.239), dark: (0.290, 0.871, 0.502))
+        case .yellow:
+            return .paceAdaptive(light: (0.706, 0.325, 0.035), dark: (0.984, 0.749, 0.141))
+        case .red:
+            return .paceAdaptive(light: (0.776, 0.157, 0.157), dark: (0.973, 0.443, 0.443))
         }
     }
 
-    /// Color for the AppKit menu bar drawing.
-    var nsColor: NSColor {
-        switch self {
-        case .green: return .systemGreen
-        case .yellow: return .systemYellow
-        case .red: return .systemRed
+    /// Color for the SwiftUI dashboard, derived from the adaptive AppKit color so the
+    /// dashboard and the menu bar always agree and both follow the system appearance.
+    var swiftUIColor: Color {
+        Color(nsColor: nsColor)
+    }
+}
+
+private extension NSColor {
+    /// A dynamic color that returns `light`/`dark` sRGB components based on the appearance it
+    /// is drawn in, so it tracks the system Light/Dark/Auto setting automatically.
+    static func paceAdaptive(
+        light: (r: CGFloat, g: CGFloat, b: CGFloat),
+        dark: (r: CGFloat, g: CGFloat, b: CGFloat)
+    ) -> NSColor {
+        NSColor(name: nil) { appearance in
+            let isDark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            let c = isDark ? dark : light
+            return NSColor(srgbRed: c.r, green: c.g, blue: c.b, alpha: 1.0)
         }
     }
 }

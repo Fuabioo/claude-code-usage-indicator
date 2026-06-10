@@ -85,10 +85,10 @@ private struct DailyPaceSection: View {
 
             if isOver {
                 Text(String(format: "Over by %.0f%%", abs(pace.remaining)))
-                    .foregroundStyle(.red).bold()
+                    .foregroundStyle(PaceColor.red.swiftUIColor).bold()
             } else {
                 Text(String(format: "Remaining today: %.0f%%", pace.remaining))
-                    .foregroundStyle(.green).bold()
+                    .foregroundStyle(PaceColor.green.swiftUIColor).bold()
             }
 
             Text("Work day \(pace.workDayIndex) · ceiling \(String(format: "%.0f%%", pace.ceiling))")
@@ -109,11 +109,11 @@ private struct FooterView: View {
             if let err = controller.snapshot?.error {
                 Text("Error: \(err.message)")
                     .font(.caption)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(PaceColor.red.swiftUIColor)
             } else if let runtime = controller.runtimeError {
                 Text("Error: \(runtime)")
                     .font(.caption)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(PaceColor.red.swiftUIColor)
                     .lineLimit(3)
             }
 

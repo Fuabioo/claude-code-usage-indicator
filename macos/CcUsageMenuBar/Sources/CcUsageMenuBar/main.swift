@@ -13,6 +13,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
+// Headless verification mode (no status item): `CcUsageMenuBar --render-swatches DIR`.
+if let i = CommandLine.arguments.firstIndex(of: "--render-swatches"), i + 1 < CommandLine.arguments.count {
+    SwatchRenderer.run(outputDir: CommandLine.arguments[i + 1])
+    exit(0)
+}
+
 let app = NSApplication.shared
 let delegate = AppDelegate()
 app.delegate = delegate
