@@ -12,8 +12,8 @@ pub mod types;
 
 // Re-export all public items
 pub use api::fetch_usage;
-pub use creds::read_token;
+pub use creds::{parse_token, read_token};
 pub use pace::{compute_hourly_color, compute_weekly_pace_color, days_into_cycle, reset_day_name};
 pub use types::{
-    format_duration, BudgetError, BudgetState, PaceColor, WindowState,
+    format_duration, BudgetError, BudgetState, PaceColor, UsageResponse, UsageWindow, WindowState,
 };

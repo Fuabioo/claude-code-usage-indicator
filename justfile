@@ -1,58 +1,38 @@
-name := 'cosmic-applet-cc-usage'
-appid := 'dev.fuabioo.CosmicAppletCcUsage'
+# Cross-platform task runner for the Claude Code usage workspace.
+#
+# Shared recipes live here; OS-specific recipes are split into linux.just and macos.just
+# and gated with [linux] / [macos] attributes. `just build` / `just install` dispatch to
+# the right platform automatically via os().
 
-# System install (requires sudo)
-prefix := '/usr'
-bindir := prefix / 'bin'
-appdir := prefix / 'share' / 'applications'
-iconsdir := prefix / 'share' / 'icons' / 'hicolor' / 'scalable' / 'apps'
-metainfodir := prefix / 'share' / 'metainfo'
+import 'linux.just'
+import 'macos.just'
 
-# User install (no sudo needed)
-user-prefix := env('HOME') / '.local'
-user-bindir := user-prefix / 'bin'
-user-appdir := user-prefix / 'share' / 'applications'
-user-iconsdir := user-prefix / 'share' / 'icons' / 'hicolor' / 'scalable' / 'apps'
-user-metainfodir := user-prefix / 'share' / 'metainfo'
+# Show available recipes
+default:
+    @just --list
 
-default: build-release
+# Test the cross-platform crates (core + CLI); applet excluded — see `test-all` on Linux.
+test:
+    cargo test
 
-# Build debug binary
-build-debug:
-    cargo build
+# Run tests across the entire workspace (Linux only — pulls in the COSMIC applet).
+[linux]
+test-all:
+    cargo test --workspace
 
-# Build release binary
-build-release:
-    cargo build --release
+# Build the cross-platform CLI (release).
+build-cli:
+    cargo build -p cc-usage-cli --release
 
-# Install to user-local directories (no sudo)
-install: build-release
-    install -Dm0755 target/release/{{name}} {{user-bindir}}/{{name}}
-    install -Dm0644 resources/{{appid}}.desktop {{user-appdir}}/{{appid}}.desktop
-    install -Dm0644 resources/{{appid}}.metainfo.xml {{user-metainfodir}}/{{appid}}.metainfo.xml
-    install -Dm0644 resources/icons/{{appid}}.svg {{user-iconsdir}}/{{appid}}.svg
+# Build everything for the current OS (CLI + the platform's GUI).
+build: build-cli
+    @just build-{{ os() }}
 
-# Install to system directories (requires sudo)
-install-system:
-    install -Dm0755 target/release/{{name}} {{bindir}}/{{name}}
-    install -Dm0644 resources/{{appid}}.desktop {{appdir}}/{{appid}}.desktop
-    install -Dm0644 resources/{{appid}}.metainfo.xml {{metainfodir}}/{{appid}}.metainfo.xml
-    install -Dm0644 resources/icons/{{appid}}.svg {{iconsdir}}/{{appid}}.svg
+# Install the GUI for the current OS.
+install:
+    @just install-{{ os() }}
 
-# Uninstall from user-local directories
-uninstall:
-    rm -f {{user-bindir}}/{{name}}
-    rm -f {{user-appdir}}/{{appid}}.desktop
-    rm -f {{user-metainfodir}}/{{appid}}.metainfo.xml
-    rm -f {{user-iconsdir}}/{{appid}}.svg
-
-# Uninstall from system directories
-uninstall-system:
-    rm -f {{bindir}}/{{name}}
-    rm -f {{appdir}}/{{appid}}.desktop
-    rm -f {{metainfodir}}/{{appid}}.metainfo.xml
-    rm -f {{iconsdir}}/{{appid}}.svg
-
-# Clean build artifacts
+# Remove build artifacts (Rust + Swift).
 clean:
     cargo clean
+    rm -rf macos/CcUsageMenuBar/.build target/macos

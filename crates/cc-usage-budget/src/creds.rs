@@ -20,7 +20,15 @@ pub fn read_token(path: &Path) -> Result<String, BudgetError> {
         BudgetError::CredentialsRead(format!("{}: {}", path.display(), e))
     })?;
 
-    let parsed: serde_json::Value = serde_json::from_str(&content).map_err(|e| {
+    parse_token(&content)
+}
+
+/// Extract the OAuth access token from credentials JSON content.
+///
+/// Accepts the same `{"claudeAiOauth": {"accessToken": "..."}}` shape that Claude Code
+/// writes, regardless of where the bytes came from (a file or, on macOS, the Keychain).
+pub fn parse_token(content: &str) -> Result<String, BudgetError> {
+    let parsed: serde_json::Value = serde_json::from_str(content).map_err(|e| {
         BudgetError::CredentialsParse(format!("invalid JSON: {}", e))
     })?;
 

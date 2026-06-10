@@ -1,4 +1,7 @@
 /target
+
+# Swift Package Manager build artifacts (macOS app)
+.build/
 *.swp
 *.swo
 .env

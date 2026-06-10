@@ -10,7 +10,11 @@ The goal is that you can build a *new* applet from scratch — for example a "co
 monitor or a "better clock" — by copying the patterns here. A copy-and-rename checklist
 is at the end (§12).
 
-All file references are relative to the repo root unless noted. The pinned libcosmic
+In this repo the applet is one crate of a multi-platform Cargo workspace, living at
+`crates/cosmic-applet-cc-usage/`. To keep this guide reusable for a *standalone* applet,
+all applet file references below (`src/...`, `resources/...`, `i18n/...`, `Cargo.toml`,
+`i18n.toml`) are written **relative to the applet crate root** — i.e. prefix them with
+`crates/cosmic-applet-cc-usage/` to locate them in this repo. The pinned libcosmic
 source lives at:
 
 ```
@@ -855,6 +859,13 @@ Prefer `just install` (writes to `~/.local`, requires `~/.local/bin` on `$PATH`)
 There are matching `uninstall` / `uninstall-system` recipes.
 
 > Project convention: install the applet via `just install`, not `cargo install --path .`.
+
+> **In this repo** the recipes above live in `linux.just` (imported by the root
+> `justfile`) and are gated to Linux. They are named `build-linux`, `install-linux`,
+> `install-system-linux`, `uninstall-linux`, and `uninstall-system-linux`; resource paths
+> are prefixed with `crates/cosmic-applet-cc-usage/resources/`. `just install` /
+> `just build` auto-dispatch to these via `os()`. A standalone applet would name them
+> plainly (`build-release`, `install`, …) as shown.
 
 ---
 
